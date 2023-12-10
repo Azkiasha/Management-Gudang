@@ -4,6 +4,7 @@ import 'package:gudang/screens/product/view_product_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:rubber/rubber.dart';
+import 'package:gudang/fetch_data.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -16,26 +17,7 @@ class _SearchPageState extends State<SearchPage>
   String selectedCategory = "";
   String selectedPrice = "";
 
-  List<Product> products = [
-    Product(
-      'assets/storage_racks.png',
-      'Metal Storage Racks',
-      'Heavy-duty metal storage racks for warehouse storage needs.',
-      199.99,
-    ),
-    Product(
-      'assets/forklift.png',
-      'Forklift Machine XL',
-      'Powerful forklift machine for efficient warehouse operations.',
-      9999.99,
-    ),
-    Product(
-      'assets/shipping_boxes.png',
-      'Shipping Boxes (Pack of 50)',
-      'Pack of 50 sturdy shipping boxes for packaging and shipping goods.',
-      45.99,
-    ),
-  ];
+  List<Product> searchResults = [];
 
   List<String> timeFilter = [
     'New Arrivals',
@@ -60,8 +42,6 @@ class _SearchPageState extends State<SearchPage>
     '\Rp 800-1000',
   ];
 
-  List<Product> searchResults = [];
-
   TextEditingController searchController = TextEditingController();
 
   late RubberAnimationController _controller;
@@ -69,12 +49,26 @@ class _SearchPageState extends State<SearchPage>
   @override
   void initState() {
     _controller = RubberAnimationController(
-        vsync: this,
-        halfBoundValue: AnimationControllerValue(percentage: 0.4),
-        upperBoundValue: AnimationControllerValue(percentage: 0.4),
-        lowerBoundValue: AnimationControllerValue(pixel: 50),
-        duration: Duration(milliseconds: 200));
+      vsync: this,
+      halfBoundValue: AnimationControllerValue(percentage: 0.4),
+      upperBoundValue: AnimationControllerValue(percentage: 0.4),
+      lowerBoundValue: AnimationControllerValue(pixel: 50),
+      duration: Duration(milliseconds: 200),
+    );
+
+    fetchData();
     super.initState();
+  }
+
+  void fetchData() async {
+    try {
+      List<Product> fetchedProducts = await Repository().fetchDataPlaces();
+      setState(() {
+        searchResults = fetchedProducts;
+      });
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
   }
 
   @override
@@ -111,14 +105,15 @@ class _SearchPageState extends State<SearchPage>
           Container(
             margin: EdgeInsets.symmetric(horizontal: 16.0),
             decoration: BoxDecoration(
-                border:
-                    Border(bottom: BorderSide(color: Colors.orange, width: 1))),
+              border:
+                  Border(bottom: BorderSide(color: Colors.orange, width: 1)),
+            ),
             child: TextField(
               controller: searchController,
               onChanged: (value) {
                 if (value.isNotEmpty) {
                   List<Product> tempList = [];
-                  products.forEach((product) {
+                  searchResults.forEach((product) {
                     if (product.name.toLowerCase().contains(value)) {
                       tempList.add(product);
                     }
@@ -129,10 +124,7 @@ class _SearchPageState extends State<SearchPage>
                   });
                   return;
                 } else {
-                  setState(() {
-                    searchResults.clear();
-                    searchResults.addAll(products);
-                  });
+                  fetchData(); // Fetch all products again when search is cleared
                 }
               },
               cursorColor: darkGrey,
@@ -147,6 +139,7 @@ class _SearchPageState extends State<SearchPage>
                   onPressed: () {
                     searchController.clear();
                     searchResults.clear();
+                    fetchData(); // Fetch all products again when search is cleared
                   },
                   child: Text(
                     'Clear',
@@ -160,17 +153,21 @@ class _SearchPageState extends State<SearchPage>
             child: Container(
               color: Colors.orange[50],
               child: ListView.builder(
-                  itemCount: searchResults.length,
-                  itemBuilder: (_, index) => Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: ListTile(
-                        onTap: () =>
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (_) => ViewProductPage(
-                                      product: searchResults[index],
-                                    ))),
-                        title: Text(searchResults[index].name),
-                      ))),
+                itemCount: searchResults.length,
+                itemBuilder: (_, index) => Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListTile(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ViewProductPage(
+                          product: searchResults[index],
+                        ),
+                      ),
+                    ),
+                    title: Text(searchResults[index].name),
+                  ),
+                ),
+              ),
             ),
           )
         ],
@@ -181,18 +178,21 @@ class _SearchPageState extends State<SearchPage>
   Widget _getUpperLayer() {
     return Container(
       decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.05),
-                offset: Offset(0, -3),
-                blurRadius: 10)
-          ],
-          borderRadius: BorderRadius.only(
-              topRight: Radius.circular(24), topLeft: Radius.circular(24)),
-          color: Colors.white),
+        boxShadow: [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.05),
+            offset: Offset(0, -3),
+            blurRadius: 10,
+          )
+        ],
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(24),
+          topLeft: Radius.circular(24),
+        ),
+        color: Colors.white,
+      ),
       child: ListView(
         physics: NeverScrollableScrollPhysics(),
-//          controller: _scrollController,
         children: <Widget>[
           Align(
             alignment: Alignment.center,
@@ -219,30 +219,36 @@ class _SearchPageState extends State<SearchPage>
             height: 50,
             child: ListView.builder(
               itemBuilder: (_, index) => Center(
-                  child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                ),
-                child: InkWell(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                  ),
+                  child: InkWell(
                     onTap: () {
                       setState(() {
                         selectedPeriod = timeFilter[index];
                       });
                     },
                     child: Container(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 4.0, horizontal: 20.0),
-                        decoration: selectedPeriod == timeFilter[index]
-                            ? BoxDecoration(
-                                color: Color(0xffFDB846),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(45)))
-                            : BoxDecoration(),
-                        child: Text(
-                          timeFilter[index],
-                          style: TextStyle(fontSize: 16.0),
-                        ))),
-              )),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 4.0,
+                        horizontal: 20.0,
+                      ),
+                      decoration: selectedPeriod == timeFilter[index]
+                          ? BoxDecoration(
+                              color: Color(0xffFDB846),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(45)),
+                            )
+                          : BoxDecoration(),
+                      child: Text(
+                        timeFilter[index],
+                        style: TextStyle(fontSize: 16.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               itemCount: timeFilter.length,
               scrollDirection: Axis.horizontal,
             ),
@@ -251,30 +257,36 @@ class _SearchPageState extends State<SearchPage>
             height: 50,
             child: ListView.builder(
               itemBuilder: (_, index) => Center(
-                  child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                ),
-                child: InkWell(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                  ),
+                  child: InkWell(
                     onTap: () {
                       setState(() {
                         selectedCategory = categoryFilter[index];
                       });
                     },
                     child: Container(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 4.0, horizontal: 20.0),
-                        decoration: selectedCategory == categoryFilter[index]
-                            ? BoxDecoration(
-                                color: Color(0xffFDB846),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(45)))
-                            : BoxDecoration(),
-                        child: Text(
-                          categoryFilter[index],
-                          style: TextStyle(fontSize: 16.0),
-                        ))),
-              )),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 4.0,
+                        horizontal: 20.0,
+                      ),
+                      decoration: selectedCategory == categoryFilter[index]
+                          ? BoxDecoration(
+                              color: Color(0xffFDB846),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(45)),
+                            )
+                          : BoxDecoration(),
+                      child: Text(
+                        categoryFilter[index],
+                        style: TextStyle(fontSize: 16.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               itemCount: categoryFilter.length,
               scrollDirection: Axis.horizontal,
             ),
@@ -283,30 +295,36 @@ class _SearchPageState extends State<SearchPage>
             height: 50,
             child: ListView.builder(
               itemBuilder: (_, index) => Center(
-                  child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                ),
-                child: InkWell(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                  ),
+                  child: InkWell(
                     onTap: () {
                       setState(() {
                         selectedPrice = priceFilter[index];
                       });
                     },
                     child: Container(
-                        padding: EdgeInsets.symmetric(
-                            vertical: 4.0, horizontal: 20.0),
-                        decoration: selectedPrice == priceFilter[index]
-                            ? BoxDecoration(
-                                color: Color(0xffFDB846),
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(45)))
-                            : BoxDecoration(),
-                        child: Text(
-                          priceFilter[index],
-                          style: TextStyle(fontSize: 16.0),
-                        ))),
-              )),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 4.0,
+                        horizontal: 20.0,
+                      ),
+                      decoration: selectedPrice == priceFilter[index]
+                          ? BoxDecoration(
+                              color: Color(0xffFDB846),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(45)),
+                            )
+                          : BoxDecoration(),
+                      child: Text(
+                        priceFilter[index],
+                        style: TextStyle(fontSize: 16.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               itemCount: priceFilter.length,
               scrollDirection: Axis.horizontal,
             ),
@@ -324,25 +342,12 @@ class _SearchPageState extends State<SearchPage>
         top: true,
         bottom: false,
         child: Scaffold(
-//          bottomSheet: ClipRRect(
-//            borderRadius: BorderRadius.only(
-//                topRight: Radius.circular(25), topLeft: Radius.circular(25)),
-//            child: BottomSheet(
-//                onClosing: () {},
-//                builder: (_) => Container(
-//                      padding: EdgeInsets.all(16.0),
-//                      child: Row(
-//                          mainAxisAlignment: MainAxisAlignment.center,
-//                          children: <Widget>[Text('Filters')]),
-//                      color: Colors.white,
-//                      width: MediaQuery.of(context).size.height,
-//                    )),
-//          ),
-            body: RubberBottomSheet(
-          lowerLayer: _getLowerLayer(), // The underlying page (Widget)
-          upperLayer: _getUpperLayer(), // The bottomsheet content (Widget)
-          animationController: _controller, // The one we created earlier
-        )),
+          body: RubberBottomSheet(
+            lowerLayer: _getLowerLayer(),
+            upperLayer: _getUpperLayer(),
+            animationController: _controller,
+          ),
+        ),
       ),
     );
   }

@@ -40,7 +40,7 @@ class _ShopItemListState extends State<ShopItemList> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: <Widget>[
                       Container(
-                        padding: EdgeInsets.only(top: 12.0, right: 12.0),
+                        padding: EdgeInsets.only(top: 12.0, right: 5.0),
                         width: 200,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +59,7 @@ class _ShopItemListState extends State<ShopItemList> {
                               child: Container(
                                 width: 160,
                                 padding: const EdgeInsets.only(
-                                    left: 32.0, top: 8.0, bottom: 8.0),
+                                    left: 38.0, top: 8.0, bottom: 8.0),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -71,7 +71,7 @@ class _ShopItemListState extends State<ShopItemList> {
                                       style: TextStyle(
                                           color: darkGrey,
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 18.0),
+                                          fontSize: 13.0),
                                     )
                                   ],
                                 ),

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "158380731477",
+    "project_id": "warehouse-18f04",
+    "storage_bucket": "warehouse-18f04.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:158380731477:android:3d4e71b4b85defb33d78dc",
+        "android_client_info": {
+          "package_name": "com.example.flutter_ecommerce_template"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2v3N2LLxcEI5fW9HYH11UY1xDDeEmjD4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:158380731477:android:61d47c3b55503ae53d78dc",
+        "android_client_info": {
+          "package_name": "com.example.praktikum"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2v3N2LLxcEI5fW9HYH11UY1xDDeEmjD4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

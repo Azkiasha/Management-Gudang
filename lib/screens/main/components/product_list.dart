@@ -15,14 +15,17 @@ class ProductList extends StatelessWidget {
   Widget build(BuildContext context) {
     double cardHeight = MediaQuery.of(context).size.height / 2.7;
     double cardWidth = MediaQuery.of(context).size.width / 1.8;
+    List<Product> displayedProducts = products.take(3).toList();
 
     return SizedBox(
       height: cardHeight,
       child: Swiper(
-        itemCount: products.length,
+        itemCount: displayedProducts.length,
         itemBuilder: (_, index) {
           return ProductCard(
-              height: cardHeight, width: cardWidth, product: products[index]);
+              height: cardHeight,
+              width: cardWidth,
+              product: displayedProducts[index]);
         },
         scale: 0.8,
         controller: swiperController,
@@ -152,7 +155,7 @@ class ProductCard extends StatelessWidget {
                           color: Color.fromRGBO(224, 69, 10, 1),
                         ),
                         child: Text(
-                          '\Rp ${product.price}',
+                          '\Rp${product.price}',
                           style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -168,7 +171,7 @@ class ProductCard extends StatelessWidget {
           Positioned(
             child: Hero(
               tag: product.image,
-              child: Image.asset(
+              child: Image.network(
                 product.image,
                 height: height / 1.7,
                 width: width / 1.4,

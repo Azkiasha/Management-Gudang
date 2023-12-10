@@ -1,23 +1,100 @@
 import 'package:gudang/app_properties.dart';
 import 'package:flutter/material.dart';
-
+import 'package:gudang/screens/intro_page.dart';
+import 'forgot_password_page.dart';
 import 'register_page.dart';
+import 'package:firebase_core/firebase_core.dart';
+import '../firebase_auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomeBackPage extends StatefulWidget {
+  const WelcomeBackPage({super.key});
   @override
-  _WelcomeBackPageState createState() => _WelcomeBackPageState();
+  State<WelcomeBackPage> createState() => _WelcomeBackPageState();
 }
 
 class _WelcomeBackPageState extends State<WelcomeBackPage> {
-  TextEditingController email =
-      TextEditingController(text: 'example@email.com');
+  final FirebaseAuthService _authService = FirebaseAuthService();
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
+  String lastLoggedInUsername = '';
 
-  TextEditingController password = TextEditingController(text: '12345678');
+  @override
+  void initState() {
+    super.initState();
+    // Load last logged-in username from SharedPreferences
+    loadLastLoggedInUsername();
+  }
+
+  void loadLastLoggedInUsername() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Mengambil data dari Firestore
+    CollectionReference users = FirebaseFirestore.instance.collection('users');
+
+    // Mengurutkan data berdasarkan field timestamp secara descending (terbaru dulu)
+    QuerySnapshot querySnapshot =
+        await users.orderBy('timestamp', descending: true).limit(1).get();
+
+    // Mendapatkan username dari dokumen pertama
+    String username = querySnapshot.docs.isNotEmpty
+        ? querySnapshot.docs.first.get('username')
+        : '';
+
+    // Memperbarui lastLoggedInUsername
+    setState(() {
+      lastLoggedInUsername = username;
+    });
+
+    // Menyimpan lastLoggedInUsername di SharedPreferences
+    prefs.setString('lastLoggedInUsername', lastLoggedInUsername);
+  }
+
+  void saveLastLoggedInUsername(String username) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('lastLoggedInUsername', username);
+  }
+
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void login() async {
+    String email = _emailController.text;
+    String password = _passwordController.text;
+    User? user =
+        await _authService.loginWithEmailandPassword(email, password, context);
+
+    if (user != null) {
+      // Save the last logged-in username
+      saveLastLoggedInUsername(user.displayName ?? '');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Login Success"),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => IntroPage()));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Login Failed"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     Widget welcomeBack = Text(
-      'Welcome Back User123,',
+      'Welcome Back $lastLoggedInUsername,',
       style: TextStyle(
           color: Colors.white,
           fontSize: 34.0,
@@ -46,8 +123,7 @@ class _WelcomeBackPageState extends State<WelcomeBackPage> {
       bottom: 40,
       child: InkWell(
         onTap: () {
-          Navigator.of(context)
-              .push(MaterialPageRoute(builder: (_) => RegisterPage()));
+          login();
         },
         child: Container(
           width: MediaQuery.of(context).size.width / 2,
@@ -99,16 +175,22 @@ class _WelcomeBackPageState extends State<WelcomeBackPage> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: TextField(
-                    controller: email,
+                    controller: _emailController,
                     style: TextStyle(fontSize: 16.0),
+                    decoration: InputDecoration(
+                      hintText: 'Email',
+                    ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: TextField(
-                    controller: password,
+                    controller: _passwordController,
                     style: TextStyle(fontSize: 16.0),
                     obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Password',
+                    ),
                   ),
                 ),
               ],
@@ -121,27 +203,63 @@ class _WelcomeBackPageState extends State<WelcomeBackPage> {
 
     Widget forgotPassword = Padding(
       padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
+      child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text(
-            'Forgot your password? ',
-            style: TextStyle(
-              fontStyle: FontStyle.italic,
-              color: Color.fromRGBO(255, 255, 255, 0.5),
-              fontSize: 14.0,
-            ),
-          ),
-          InkWell(
-            onTap: () {},
-            child: Text(
-              'Reset password',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14.0,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Forgot your password? ',
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Color.fromRGBO(255, 255, 255, 0.5),
+                  fontSize: 14.0,
+                ),
               ),
-            ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => ForgotPasswordPage()));
+                },
+                child: Text(
+                  'Reset password',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                "Don't have an account? ",
+                style: TextStyle(
+                  fontStyle: FontStyle.italic,
+                  color: Color.fromRGBO(255, 255, 255, 0.5),
+                  fontSize: 14.0,
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (_) => RegisterPage()));
+                },
+                child: Text(
+                  'Register',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14.0,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

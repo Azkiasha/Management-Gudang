@@ -5,8 +5,47 @@ import 'package:gudang/screens/settings/settings_page.dart';
 import 'package:gudang/screens/tracking_page.dart';
 import 'package:gudang/screens/wallet/wallet_page.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
+  final User? user;
+
+  const ProfilePage({Key? key, required this.user}) : super(key: key);
+
+  @override
+  _ProfilePageState createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late String username;
+
+  @override
+  void initState() {
+    super.initState();
+    // Mengambil username dari Firestore saat widget diinisialisasi
+    fetchUsername();
+  }
+
+  void fetchUsername() async {
+    try {
+      // Mengambil data user dari Firestore berdasarkan UID
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+      // Mendapatkan username dari data Firestore
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await firestore.collection('users').doc(widget.user?.uid).get();
+      String fetchedUsername = snapshot['username'];
+
+      // Memperbarui state
+      setState(() {
+        username = fetchedUsername;
+      });
+    } catch (e) {
+      print('Error fetching username: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,7 +70,7 @@ class ProfilePage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    'Tazkia Ikhsanul',
+                    username,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),

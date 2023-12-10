@@ -43,7 +43,7 @@ class ProductDisplay extends StatelessWidget {
                             fontFamily: "Montserrat",
                             fontSize: 36.0)),
                     TextSpan(
-                        text: '.58',
+                        text: '.00',
                         style: const TextStyle(
                             color: const Color(0xFFFFFFFF),
                             fontWeight: FontWeight.w400,
@@ -66,7 +66,7 @@ class ProductDisplay extends StatelessWidget {
                     child: Container(
                       child: Hero(
                         tag: product.image,
-                        child: Image.asset(
+                        child: Image.network(
                           product.image,
                           fit: BoxFit.contain,
                           height: 230,

@@ -4,6 +4,7 @@ import 'package:gudang/models/product.dart';
 import 'package:gudang/screens/address/add_address_page.dart';
 import 'package:gudang/screens/payment/unpaid_page.dart';
 import 'package:flutter/material.dart';
+import 'package:gudang/fetch_data.dart';
 
 import 'components/credit_card.dart';
 import 'components/shop_item_list.dart';
@@ -16,11 +17,26 @@ class CheckOutPage extends StatefulWidget {
 class _CheckOutPageState extends State<CheckOutPage> {
   SwiperController swiperController = SwiperController();
 
-  List<Product> products = [
-    Product('assets/sepatu_1.png', 'Sepatu Pantofel', 'description', 125.000),
-    Product('assets/sepatu_2.png', 'Sepatu Sneakers', 'description', 200.000),
-    Product('assets/sepatu_3.png', 'Sepatu Lari', 'description', 150.000)
-  ];
+  List<Product> products = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch data when the widget is initialized
+    fetchData();
+  }
+
+  // Function to fetch data
+  void fetchData() async {
+    try {
+      List<Product> fetchedProducts = await Repository().fetchDataPlaces();
+      setState(() {
+        products = fetchedProducts;
+      });
+    } catch (error) {
+      print('Error fetching data: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,22 +47,25 @@ class _CheckOutPageState extends State<CheckOutPage> {
         height: 80,
         width: MediaQuery.of(context).size.width / 1.5,
         decoration: BoxDecoration(
-            gradient: mainButton,
-            boxShadow: [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.16),
-                offset: Offset(0, 5),
-                blurRadius: 10.0,
-              )
-            ],
-            borderRadius: BorderRadius.circular(9.0)),
+          gradient: mainButton,
+          boxShadow: [
+            BoxShadow(
+              color: Color.fromRGBO(0, 0, 0, 0.16),
+              offset: Offset(0, 5),
+              blurRadius: 10.0,
+            ),
+          ],
+          borderRadius: BorderRadius.circular(9.0),
+        ),
         child: Center(
-          child: Text("Check Out",
-              style: const TextStyle(
-                  color: const Color(0xfffefefe),
-                  fontWeight: FontWeight.w600,
-                  fontStyle: FontStyle.normal,
-                  fontSize: 20.0)),
+          child: Text(
+            "Check Out",
+            style: const TextStyle(
+              color: const Color(0xfffefefe),
+              fontWeight: FontWeight.w600,
+              fontSize: 20.0,
+            ),
+          ),
         ),
       ),
     );
@@ -62,12 +81,15 @@ class _CheckOutPageState extends State<CheckOutPage> {
             icon: Image.asset('assets/icons/denied_wallet.png'),
             onPressed: () => Navigator.of(context)
                 .push(MaterialPageRoute(builder: (_) => UnpaidPage())),
-          )
+          ),
         ],
         title: Text(
           'Checkout',
           style: TextStyle(
-              color: darkGrey, fontWeight: FontWeight.w500, fontSize: 18.0),
+            color: darkGrey,
+            fontWeight: FontWeight.w500,
+            fontSize: 18.0,
+          ),
         ),
       ),
       body: LayoutBuilder(

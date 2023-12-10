@@ -33,7 +33,7 @@ class ShopProduct extends StatelessWidget {
               ),
             ),
             Text(
-              '\Rp ${product.price}',
+              '\Rp${product.price}',
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: darkGrey, fontWeight: FontWeight.bold, fontSize: 18.0),
@@ -72,7 +72,7 @@ class ShopProductDisplay extends StatelessWidget {
           child: SizedBox(
               height: 80,
               width: 80,
-              child: Image.asset(
+              child: Image.network(
                 '${product.image}',
                 fit: BoxFit.contain,
               )),

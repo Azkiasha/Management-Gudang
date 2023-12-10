@@ -85,7 +85,7 @@ class _ViewProductPageState extends State<ViewProductPage> {
             )
           ],
           title: Text(
-            'Shoes',
+            'Headphones',
             style: const TextStyle(
                 color: darkGrey,
                 fontWeight: FontWeight.w500,
